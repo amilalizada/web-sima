@@ -14,8 +14,8 @@ class Client:
                 json=data,
                 ssl=False,
             ) as response:
-                data = await response.json()
                 if response.status == 200:
+                    data = await response.json()
                     return data
-                raise Exception
+                raise Exception("Error while generating url or qr code")
                     
