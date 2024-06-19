@@ -5,10 +5,8 @@ import hashlib
 import hmac
 from typing import Union
 from datetime import datetime, timedelta
-from enums import SimaPayloadType
-from starlette.datastructures import UploadFile
-
-from client import Client
+from sima_sign.enums import SimaPayloadType
+from sima_sign.client import Client
 
 
 class SimaSign:
@@ -47,7 +45,7 @@ class SimaSign:
                 "SignableContainer": signable_container,
                 "Header": {
                     "AlgName": "HMACSHA256",
-                    "Signature": await self.generate_hash_signature(signable_container),
+                    "Signature": await self.__generate_hash_signature(signable_container),
                 },
             }
         ).replace(" ", "")
@@ -69,8 +67,8 @@ class SimaSign:
             "OperationInfo": {
                 "Type": type,
                 "OperationId": operation_id,
-                "NbfUTC": await self.get_created_time(),
-                "ExpUTC": await self.get_expire_time(),
+                "NbfUTC": await self.__get_created_time(),
+                "ExpUTC": await self.__get_expire_time(),
                 "Assignee": [],
             },
             "DataInfo": {"DataURI": data_url},
