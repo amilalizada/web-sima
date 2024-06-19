@@ -5,11 +5,10 @@ import hashlib
 import hmac
 from typing import Union
 from datetime import datetime, timedelta
-from sima_sign.enums import SimaPayloadType
-from sima_sign.client import Client
+from web_sima.enums import SimaPayloadType
 
 
-class SimaSign:
+class SimaClient:
 
     def __init__(
         self, sima_master_key, sima_client_id, sima_client_name, base_api_url
@@ -160,19 +159,14 @@ class SimaSign:
         )
         payload = await self.__dump_sima_payload(signable_container)
         url = f"{self.__base_api_url}/?tsquery={payload}"
-        client = Client(url=url)
+        response = {
+            "url": url,
+            "sima_operation_id": operation_id,
+        }
         if web2app:
-            return {
-                "sima_sign_url": await client.generate_url_or_qr(
-                    data={"url": f"sima://web-to-app?data={url}"}
-                ),
-                "sima_operation_id": operation_id,
-            }
+            response["url"] = f"sima://web-to-app?data={url}"
 
-        qr_image = await client.generate_url_or_qr(url)
-        encoded_qr = base64.b64encode(qr_image)
-
-        return {"sima_sign_url": encoded_qr, "sima_operation_id": operation_id}
+        return response
 
     async def generate_sima_sign_contract(
         self,
@@ -216,16 +210,11 @@ class SimaSign:
         signable_container["OperationInfo"]["Assignee"].append(fin_code)
         payload = await self.__dump_sima_payload(signable_container)
         url = f"{self.__base_api_url}/?tsquery={payload}"
-        client = Client(url=url)
+        response = {
+            "url": url,
+            "sima_operation_id": operation_id,
+        }
         if web2app:
-            return {
-                "sima_sign_url": await client.generate_url_or_qr(
-                    data={"url": f"sima://web-to-app?data={url}"}
-                ),
-                "sima_operation_id": operation_id,
-            }
-
-        qr_image = await client.generate_url_or_qr(url)
-        encoded_qr = base64.b64encode(qr_image)
-
-        return {"sima_sign_url": encoded_qr, "sima_operation_id": operation_id}
+            response["url"] = f"sima://web-to-app?data={url}"
+            
+        return response
