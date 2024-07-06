@@ -11,12 +11,14 @@ from web_sima.enums import SimaPayloadType
 class SimaClient:
 
     def __init__(
-        self, sima_master_key, sima_client_id, sima_client_name, base_api_url
+        self, sima_master_key, sima_client_id, sima_client_name, base_api_url, icon_uri, redirect_uri
     ) -> None:
         self.__master_key = sima_master_key
         self.__client_id = sima_client_id
         self.__client_name = sima_client_name
         self.__base_api_url = base_api_url
+        self.__icon_uri = icon_uri
+        self.__redirect_uri = redirect_uri
 
     async def __get_created_time(self):
         utc_now = datetime.now().timestamp()
@@ -121,9 +123,8 @@ class SimaClient:
     async def sima_kyc_auth_payload(
         self,
         *,
-        identity_id: Union[str, uuid.UUID, int],
-        icon_uri: str,
-        redirect_uri: str,
+        callback_url: str,
+        data_url: str,
         web2app: bool = False,
     ):
         """
@@ -146,16 +147,14 @@ class SimaClient:
 
         """
         operation_id = await self.__create_operation_id()
-        data_url = f"{self.__base_api_url}/getdata/{operation_id}/register?user_id={identity_id}"
-        callback_url = f"{self.__base_api_url}/callback/{operation_id}/register?user_id={identity_id}"
 
         signable_container = await self.__generate_signable_container(
             operation_id=operation_id,
             type=SimaPayloadType.Auth,
             callback_url=callback_url,
             data_url=data_url,
-            icon_uri=icon_uri,
-            redirect_uri=redirect_uri,
+            icon_uri=self.__icon_uri,
+            redirect_uri=self.__redirect_uri,
         )
         payload = await self.__dump_sima_payload(signable_container)
         url = f"{self.__base_api_url}/?tsquery={payload}"
@@ -171,10 +170,9 @@ class SimaClient:
     async def generate_sima_sign_contract(
         self,
         *,
-        request_id: str,
-        identity_id: Union[str, uuid.UUID, int],
+        data_url: str,
+        callback_url: str,
         fin_code: str,
-        token: str,
         web2app: bool = False,
     ):
         """
@@ -197,8 +195,6 @@ class SimaClient:
         
         operation_id = await self.__create_operation_id()
 
-        data_url = f"{self.__base_api_url}/getdata/{operation_id}/sign/{identity_id}/{request_id}"
-        callback_url = f"{self.__base_api_url}/callback/{operation_id}/sign/{identity_id}/{request_id}?token={token}"
         signable_container = await self.__generate_signable_container(
             operation_id,
             SimaPayloadType.Sign,
